@@ -1,87 +1,14 @@
 import time
 import pymem
-import yaml
 import psutil
-import ctypes
 import random
 import threading
 import customtkinter
 import webbrowser
 import os
 
-from pystyle import Colorate, Colors, Center
 from colorsys import hsv_to_rgb
 from pymem.process import module_from_name
-import datetime
-
-debug = True
-savelogs = True
-
-class DebugLog:
-    def __init__(self, debug=debug):
-        self.debug = debug
-        self.log_file = "logs/logs.txt"
-
-    def _log(self, message):
-        if self.debug:
-            print(message)
-        else:
-            pass
-    
-    def _savetofile(self, message, type):
-        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-
-        if type == "info":
-            try:
-                with open(self.log_file, "a") as file:
-                    file.write(f"[{time}][+] {message}\n")
-            except Exception:
-                pass
-
-        elif type == "error":
-            try:
-                with open(self.log_file, "a") as file:
-                    file.write(f"[{time}][-] {message}\n")
-            except Exception:
-                pass
-
-        elif type == "warning":
-            try:
-                with open(self.log_file, "a") as file:
-                    file.write(f"[{time}][!] {message}\n")
-            except Exception:
-                pass
-    
-    def info(self, message):
-        self._log(f"{Colors.green}[+] {Colors.reset}{message}")
-        if savelogs == True:
-            self._savetofile(message, "info")
-        else:
-            pass
-    
-    def error(self, message):
-        self._log(f"{Colors.red}[-] {Colors.reset}{message}")
-        if savelogs == True:
-            self._savetofile(message, "error")
-        else:
-            pass
-    
-    def warning(self, message):
-        self._log(f"{Colors.cyan}[!] {Colors.reset}{message}")
-        if savelogs == True:
-            self._savetofile(message, "warning")
-        else:
-            pass
-
-bananadropfarmlog = DebugLog()
-
-ctypes.windll.kernel32.SetConsoleTitleW("Banana Drop Farm v1.5 | github.com/zZan54")
-
-bananadropfarm = Center.XCenter("\nBanana Drop Farm v1.5\n")
-print(Colorate.Horizontal(Colors.yellow_to_red, bananadropfarm, 1))
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
@@ -117,72 +44,6 @@ except Exception:
     bananadropfarmlog.error(f"An error occurred while trying to find the game process. Exiting...")
     exit()
 
-def get_configs():
-    configs = []
-    try:
-        for file in os.listdir("configs"):
-            if file.endswith(".yaml"):
-                configs.append(file)
-    except Exception:
-        bananadropfarmlog.warning("An error occurred while trying to get the configs. Using no configs.")
-        pass
-    return configs
-
-def load_config():
-    config_name = loadconfigname_var.get()
-    with open(f'configs/{config_name}', 'r') as config_file:
-        config = yaml.safe_load(config_file)
-
-    botidlecheckbypassmethod_var.set(config['botidlecheckbypass']['method'])
-    botidlecheckbypassdelay_var.set(config['botidlecheckbypass']['delay'])
-
-    botidlecheckbypass_var.set(config['botidlecheckbypass']['enabled'])
-    if botidlecheckbypass_var.get():
-        botidlecheckbypass1()
-
-    spoofcpsmethod_var.set(config['spoofcps']['method'])
-    spoofcpsdelay_var.set(config['spoofcps']['delay'])
-
-    spoofcps_var.set(config['spoofcps']['enabled'])
-    if spoofcps_var.get():
-        spoofcps1()
-
-    idletimerreset_var.set(config['idletimerreset']['enabled'])
-    if idletimerreset_var.get():
-        idletimerreset1()
-
-def save_config():
-    config = {
-        "botidlecheckbypass": {
-            "enabled": botidlecheckbypass_var.get(),
-            "method": botidlecheckbypassmethod_var.get(),
-            "delay": botidlecheckbypassdelay_var.get()
-        },
-        "spoofcps": {
-            "enabled": spoofcps_var.get(),
-            "method": spoofcpsmethod_var.get(),
-            "delay": spoofcpsdelay_var.get()
-        },
-        "idletimerreset": {
-            "enabled": idletimerreset_var.get()
-        }
-    }
-
-    config_name = saveconfigname.get()
-    config_name = config_name.replace('.yaml', '')
-
-    if config_name == "" or config_name == None:
-        bananadropfarmlog.error("Please enter a config name.")
-        return
-
-    try:
-        with open(f"configs/{config_name}.yaml", "w") as config_file:
-            yaml.dump(config, config_file)
-        bananadropfarmlog.info(f"Successfully saved the config as {config_name}.yaml")
-    except Exception:
-        bananadropfarmlog.error("An error occurred while trying to save the config.")
-        pass
-
 def GetPtrAddr(game, base, offsets):
     addr = game.read_longlong(base)
     for offset in offsets:
@@ -193,14 +54,7 @@ def GetPtrAddr(game, base, offsets):
 app = customtkinter.CTk()
 app.title("Banana Drop Farm")
 app.geometry("550x350")
-app.resizable(False, False)
-
-try:
-    app.iconbitmap("banana.ico")
-    bananadropfarmlog.info("Successfully set the app icon.")
-except Exception:
-    bananadropfarmlog.warning("An error occurred while trying to set the app icon. Using the default icon.")
-    pass
+app.resizable(True, True) // Allowed resizing
 
 score_addr = 0x1BFDFC0
 score_offsets = [0x100, 0x1C0, 0x80, 0xE8, 0x78, 0x60, 0xA0]
@@ -359,7 +213,6 @@ options = customtkinter.CTkTabview(master=app, width=520, height=300)
 options.pack(anchor=customtkinter.CENTER)
 
 options.add("Cheat")
-options.add("Config")
 options.add("Info")
 options.set("Cheat")
 
@@ -424,40 +277,6 @@ idletimerreset = customtkinter.CTkCheckBox(master=idletimerresetall, text="Idle 
 idletimerreset.pack(side="left", padx=5)
 
 
-saveconfig = customtkinter.CTkFrame(master=options.tab("Config"))
-saveconfig.pack(side="top", padx=20, pady=8)
-
-saveconfigname = customtkinter.CTkEntry(master=saveconfig, placeholder_text="Config name")
-saveconfigname.pack(side="left", padx=5)
-
-saveconfigtofile = customtkinter.CTkButton(master=saveconfig, text="Save config", command=save_config)
-saveconfigtofile.pack(side="left", padx=5)
-
-
-loadconfig = customtkinter.CTkFrame(master=options.tab("Config"))
-loadconfig.pack(side="top", padx=20, pady=8)
-
-loadconfigname_var = customtkinter.StringVar(value='example.yaml')
-loadconfigname = customtkinter.CTkComboBox(master=loadconfig, values=get_configs(), variable=loadconfigname_var, width=150)
-loadconfigname.pack(side="left", padx=5)
-loadconfigname_var.set('example.yaml')
-
-loadconfigfromfile = customtkinter.CTkButton(master=loadconfig, text="Load config", command=load_config)
-loadconfigfromfile.pack(side="left", padx=5)
-
-
-livescore = customtkinter.CTkLabel(master=options.tab("Cheat"), text="Live Score: ", text_color="white")
-livescore.pack(side="top", padx=20, pady=8)
-
-livescore_running = True
-
-def livescoreshow():
-    while livescore_running:
-        current_score = game.read_int(GetPtrAddr(game, gameModule + score_addr, score_offsets))
-        livescore.configure(text=f"Live Score: {current_score - 1}")
-        time.sleep(2)
-
-
 info = """Score Changer - changes score
 
 Reset Score - resets score
@@ -479,8 +298,6 @@ Spoof methods:
  - Static - sets a static cps value of 15
 
 Idle Timer Reset - resets the idle timer to 0 every 5 seconds (it is not visible in the game)
-
-Live Score - displays the current game score, as the game does not update the score in real time
 
 Notes: 
  - The chosen method is activated every few seconds, 
@@ -517,9 +334,8 @@ def githublinkanimation():
         time.sleep(0.01)
 
 def on_close():
-    global animation_running, livescore_running
+    global animation_running
     animation_running = False
-    livescore_running = False
     app.destroy()
 
 app.protocol("WM_DELETE_WINDOW", on_close)
@@ -527,9 +343,5 @@ app.protocol("WM_DELETE_WINDOW", on_close)
 githublinkanimationthread = threading.Thread(target=githublinkanimation)
 githublinkanimationthread.daemon = True
 githublinkanimationthread.start()
-
-livescorethread = threading.Thread(target=livescoreshow)
-livescorethread.daemon = True
-livescorethread.start()
 
 app.mainloop()
